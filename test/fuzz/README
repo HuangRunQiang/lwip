@@ -1,37 +1,21 @@
+对 lwIP 栈进行模糊测试 (afl-fuzz 需要 Linux/Unix 或类似系统)
 
-Fuzzing the lwIP stack (afl-fuzz requires linux/unix or similar)
+该目录包含一个小应用程序，用于从标准输入读取以太网帧并进行处理。它与“美国模糊循环”（american fuzzy lop）工具（可以在 http://lcamtuf.coredump.cx/afl/ 找到）一起使用，并通过示例输入测试如何处理意外输入。afl 工具将读取已知输入，并尝试修改它们，以尽可能多地覆盖代码路径，通过对代码进行插桩并跟踪执行的代码。
 
-This directory contains a small app that reads Ethernet frames from stdin and
-processes them. It is used together with the 'american fuzzy lop' tool (found
-at http://lcamtuf.coredump.cx/afl/) and the sample inputs to test how
-unexpected inputs are handled. The afl tool will read the known inputs, and
-try to modify them to exercise as many code paths as possible, by instrumenting
-the code and keeping track of which code is executed.
+只需运行 make 即可生成测试程序。
 
-Just running make will produce the test program.
+运行 make 时加上参数 D=-DLWIP_FUZZ_MULTI_PACKET 将生成一个解析输入数据为多个数据包的二进制文件（实验性！）。
 
-Running make with parameter 'D=-DLWIP_FUZZ_MULTI_PACKET' will produce a binary
-that parses the input data as multiple packets (experimental!).
-
-Then run afl with:
+然后运行 afl：
 
 afl-fuzz -i inputs/<INPUT> -o output ./lwip_fuzz
 
-and it should start working. It will probably complain about CPU scheduler,
-set AFL_SKIP_CPUFREQ=1 to ignore it.
-If it complains about invalid "/proc/sys/kernel/core_pattern" setting, try
-executing "sudo bash -c 'echo core > /proc/sys/kernel/core_pattern'".
+这应该开始工作。如果它抱怨 CPU 调度程序，请设置 AFL_SKIP_CPUFREQ=1 来忽略它。如果它抱怨 /proc/sys/kernel/core_pattern 设置无效，请尝试执行：
 
-The input is split into different subdirectories since they test different
-parts of the code, and since you want to run one instance of afl-fuzz on each
-core.
+sudo bash -c 'echo core > /proc/sys/kernel/core_pattern'
 
-When afl finds a crash or a hang, the input that caused it will be placed in
-the output directory. If you have hexdump and text2pcap tools installed,
-running output_to_pcap.sh <outputdir> will create pcap files for each input
-file to simplify viewing in wireshark.
+输入被拆分到不同的子目录中，因为它们测试代码的不同部分，并且您希望在每个核心上运行一个 afl-fuzz 实例。
 
-The lwipopts.h file needs to have checksum checking off, otherwise almost every
-packet will be discarded because of that. The other options can be tuned to
-expose different parts of the code.
+当 afl 发现崩溃或挂起时，导致该问题的输入将被放置在输出目录中。如果您安装了 hexdump 和 text2pcap 工具，运行 output_to_pcap.sh <outputdir> 将为每个输入文件创建 pcap 文件，以简化在 Wireshark 中查看。
 
+lwipopts.h 文件需要关闭校验和检查，否则几乎每个数据包都会因为这个原因被丢弃。其他选项可以进行调整，以暴露代码的不同部分。
