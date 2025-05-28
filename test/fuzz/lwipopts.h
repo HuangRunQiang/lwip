@@ -33,7 +33,7 @@
 #define LWIP_HDR_LWIPOPTS_H__
 
 /* 防止链接 sys_arch.c（我们在单元测试中不测试 API 层） */
-#define NO_SYS                          1 // 设置为1表示不使用系统架构层，简化测试环境
+#define NO_SYS                          1 // 是否使用操作系统（仅支持freertos）
 
 #define LWIP_NETCONN                    0 // 禁用 lwIP 网络连接 API。如果设置为1，则启用 lwIP 的 netconn API
 #define LWIP_SOCKET                     0 // 禁用 lwIP 套接字 API。如果设置为1，则启用 lwIP 的 socket API
